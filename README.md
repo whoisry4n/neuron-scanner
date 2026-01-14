@@ -22,7 +22,7 @@
 
 *Trang lịch sử scan với bảng chi tiết và phân màu an toàn/rủi ro*
 
-##🛠️ Kỹ thuật phân tích thủ công (Static Analysis)
+## Kỹ thuật phân tích thủ công (Static Analysis)
 
 **Dự án tập trung vào việc hiểu sâu bản chất mã độc thông qua các thuật toán nội tại thay vì chỉ sử dụng API bên ngoài:**
 - Magic Bytes Verification: Đối chiếu Byte đầu tiên (File Header) để phát hiện hành vi giả mạo định dạng (ví dụ: file .exe núp bóng .jpg).
