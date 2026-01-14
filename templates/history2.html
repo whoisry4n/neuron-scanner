@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Lịch sử Scan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&family=Orbitron:wght@500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0d1117;     
+            --bg-secondary: #161b22;   
+            --text-primary: #c9d1d9;   
+            --text-secondary: #8b949e; 
+            --accent-safe: #00ff9d;    
+            --accent-danger: #ff0040;  
+            --accent-blue: #00bfff;    
+            --border: #30363d;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+            color: var(--text-primary);
+            font-family: 'Roboto Mono', monospace;
+            text-align: center;
+            margin: 0;
+            padding: 40px 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.8rem;
+            margin-bottom: 30px;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-safe));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(0, 255, 157, 0.3);
+        }
+
+        .container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            width: 95%;
+            max-width: 1100px; /* Tăng độ rộng container để bảng thoáng hơn */
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6),
+                        0 0 20px rgba(0, 191, 255, 0.1);
+            overflow-x: auto; /* Thêm scroll ngang nếu màn hình quá nhỏ */
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed; /* Ép các cột tuân thủ độ rộng quy định */
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 15px 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            word-wrap: break-word; /* Cho phép ngắt dòng */
+            overflow-wrap: break-word;
+            vertical-align: top;
+        }
+
+        /* Chia tỷ lệ các cột */
+        th:nth-child(1), td:nth-child(1) { width: 140px; } /* Thời gian */
+        th:nth-child(2), td:nth-child(2) { width: 70px; }  /* Loại */
+        th:nth-child(3), td:nth-child(3) { width: 25%; }   /* Mục tiêu */
+        th:nth-child(4), td:nth-child(4) { width: auto; }  /* Kết quả - Cột này sẽ co dãn */
+        th:nth-child(5), td:nth-child(5) { width: 100px; text-align: center; }
+
+        th {
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        tr.safe td.result-cell {
+            color: var(--accent-safe);
+        }
+
+        tr.danger td.result-cell {
+            color: var(--accent-danger);
+        }
+
+        .result-cell {
+            line-height: 1.5;
+            font-size: 0.9rem;
+            white-space: pre-line; /* Giữ lại các khoảng ngắt dòng từ dữ liệu */
+        }
+
+        .target-cell {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .no-history {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-top: 20px;
+        }
+
+        a.back-link {
+            margin-top: 30px;
+            display: inline-block;
+            padding: 10px 25px;
+            background: var(--bg-primary);
+            border: 1px solid var(--accent-blue);
+            border-radius: 8px;
+            color: var(--accent-blue);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        a.back-link:hover {
+            background: var(--accent-blue);
+            color: #000;
+            box-shadow: 0 0 20px rgba(0, 191, 255, 0.4);
+        }
+
+        footer {
+            margin-top: 50px;
+            padding-bottom: 20px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Lịch sử Scan</h1>
+        {% if scans %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Thời gian</th>
+                        <th>Loại</th>
+                        <th>Mục tiêu</th>
+                        <th>Kết quả</th>
+                        <th style="text-align: center;">Pos/Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for scan in scans %}
+                        <tr class="{% if scan.positives == 0 or scan.positives is none %}safe{% else %}danger{% endif %}">
+                            <td>{{ scan.timestamp }}</td>
+                            <td>{{ scan.type }}</td>
+                            <td class="target-cell">{{ scan.target }}</td>
+                            <td class="result-cell">{{ scan.result }}</td>
+                            <td style="text-align: center;">
+                                {% if scan.positives is not none and scan.total is not none %}
+                                    {{ scan.positives }}/{{ scan.total }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="no-history">Chưa có lịch sử scan nào.</p>
+        {% endif %}
+
+        <a href="/" class="back-link">Quay về trang chính</a>
+    </div>
+
+    <footer>Powered by K28-CMU</footer>
+</body>
+</html>
