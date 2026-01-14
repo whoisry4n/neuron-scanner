@@ -18,7 +18,7 @@
 
 *Giao diện trang chủ với form scan URL/file*
 
-<img width="1920" height="1080" alt="{863CEC8F-CB7F-4958-A00E-516CFD5239AE}" src="https://github.com/user-attachments/assets/88e4a2f6-863b-4e5d-893e-1ac2bdc95bc3" />
+<img width="1920" height="1031" alt="{B7CDCBAE-FCCA-4ACA-A2CF-1D7A365D1580}" src="https://github.com/user-attachments/assets/f3771d53-8260-44ca-bab9-f5bb0ad1fe81" />
 
 *Trang lịch sử scan với bảng chi tiết và phân màu an toàn/rủi ro*
 
