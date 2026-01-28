@@ -147,7 +147,7 @@ def self_scan_url(url):
     
     if risks:
         return f'URL có rủi ro! Lý do: {" | ".join(risks)}'
-    return 'URL an toàn theo kiểm tra cơ bản.'
+    return 'URL an toàn theo các bước kiểm tra.'
 
 def self_scan_file(filepath):
     risks = []
@@ -203,7 +203,7 @@ def self_scan_file(filepath):
 
     if risks:
         return f'File có rủi ro! Lý do: {" | ".join(risks)}'
-    return 'File an toàn theo kiểm tra cơ bản.'
+    return 'File an toàn theo các bước kiểm tra.'
 
 @app.route('/history')
 def history():

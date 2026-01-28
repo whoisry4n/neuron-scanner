@@ -20,7 +20,6 @@
             background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
             color: var(--text-primary);
             font-family: 'Roboto Mono', monospace;
-            text-align: center;
             margin: 0;
             padding: 40px 20px;
             min-height: 100vh;
@@ -35,9 +34,9 @@
             margin-bottom: 30px;
             background: linear-gradient(90deg, var(--accent-blue), var(--accent-safe));
             -webkit-background-clip: text;
-            background-clip: text;
             -webkit-text-fill-color: transparent;
             text-shadow: 0 0 20px rgba(0, 255, 157, 0.3);
+            text-align: center;
         }
 
         .container {
@@ -46,16 +45,16 @@
             border-radius: 16px;
             padding: 30px;
             width: 95%;
-            max-width: 1100px; /* Tăng độ rộng container để bảng thoáng hơn */
+            max-width: 1100px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6),
                         0 0 20px rgba(0, 191, 255, 0.1);
-            overflow-x: auto; /* Thêm scroll ngang nếu màn hình quá nhỏ */
+            overflow-x: auto;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            table-layout: fixed; /* Ép các cột tuân thủ độ rộng quy định */
+            table-layout: fixed;
             margin-top: 10px;
         }
 
@@ -63,16 +62,15 @@
             padding: 15px 10px;
             text-align: left;
             border-bottom: 1px solid var(--border);
-            word-wrap: break-word; /* Cho phép ngắt dòng */
+            word-wrap: break-word;
             overflow-wrap: break-word;
             vertical-align: top;
         }
 
-        /* Chia tỷ lệ các cột */
-        th:nth-child(1), td:nth-child(1) { width: 140px; } /* Thời gian */
-        th:nth-child(2), td:nth-child(2) { width: 70px; }  /* Loại */
-        th:nth-child(3), td:nth-child(3) { width: 25%; }   /* Mục tiêu */
-        th:nth-child(4), td:nth-child(4) { width: auto; }  /* Kết quả - Cột này sẽ co dãn */
+        th:nth-child(1), td:nth-child(1) { width: 140px; }
+        th:nth-child(2), td:nth-child(2) { width: 70px; }
+        th:nth-child(3), td:nth-child(3) { width: 25%; }
+        th:nth-child(4), td:nth-child(4) { width: auto; }
         th:nth-child(5), td:nth-child(5) { width: 100px; text-align: center; }
 
         th {
@@ -83,18 +81,13 @@
             letter-spacing: 1px;
         }
 
-        tr.safe td.result-cell {
-            color: var(--accent-safe);
-        }
-
-        tr.danger td.result-cell {
-            color: var(--accent-danger);
-        }
+        tr.safe td.result-cell { color: var(--accent-safe); }
+        tr.danger td.result-cell { color: var(--accent-danger); }
 
         .result-cell {
             line-height: 1.5;
             font-size: 0.9rem;
-            white-space: pre-line; /* Giữ lại các khoảng ngắt dòng từ dữ liệu */
+            white-space: pre-line;
         }
 
         .target-cell {
@@ -108,22 +101,61 @@
             margin-top: 20px;
         }
 
+        /* ===== BACK BUTTON (FIXED TOP LEFT) ===== */
         a.back-link {
-            margin-top: 30px;
-            display: inline-block;
-            padding: 10px 25px;
-            background: var(--bg-primary);
+            position: fixed;
+            top: 18px;
+            left: 18px;
+            z-index: 999;
+
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+
+            padding: 10px 16px;
+            background: rgba(13, 17, 23, 0.92);
             border: 1px solid var(--accent-blue);
-            border-radius: 8px;
+            border-radius: 10px;
+
             color: var(--accent-blue);
             text-decoration: none;
-            transition: all 0.3s ease;
+            font-size: 0.85rem;
+            font-weight: 500;
+
+            box-shadow:
+                0 0 12px rgba(0, 191, 255, 0.25),
+                inset 0 0 10px rgba(0, 191, 255, 0.08);
+
+            backdrop-filter: blur(6px);
+            transition: all 0.25s ease;
+        }
+
+        a.back-link::before {
+            content: "←";
+            font-size: 1rem;
+            transition: transform 0.25s ease;
         }
 
         a.back-link:hover {
             background: var(--accent-blue);
             color: #000;
-            box-shadow: 0 0 20px rgba(0, 191, 255, 0.4);
+            box-shadow:
+                0 0 25px rgba(0, 191, 255, 0.6),
+                0 0 50px rgba(0, 191, 255, 0.3);
+        }
+
+        a.back-link:hover::before {
+            transform: translateX(-3px);
+        }
+
+        @media (max-width: 600px) {
+            a.back-link {
+                top: 12px;
+                left: 12px;
+                padding: 8px 12px;
+                font-size: 0.75rem;
+                border-radius: 8px;
+            }
         }
 
         footer {
@@ -131,12 +163,18 @@
             padding-bottom: 20px;
             color: var(--text-secondary);
             font-size: 0.9rem;
+            text-align: center;
         }
     </style>
 </head>
+
 <body>
+
+    <a href="/" class="back-link">Quay về trang chính</a>
+
     <div class="container">
-        <h1>Lịch sử Scan</h1>
+        <h1>Lịch Sử Scan</h1>
+
         {% if scans %}
             <table>
                 <thead>
@@ -169,10 +207,18 @@
         {% else %}
             <p class="no-history">Chưa có lịch sử scan nào.</p>
         {% endif %}
-
-        <a href="/" class="back-link">Quay về trang chính</a>
     </div>
 
-    <footer>Powered by K28-CMU</footer>
+    <footer>NEURON SCANNER | K28-CMU</footer>
+
+    <!-- ESC shortcut -->
+    <script>
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape") {
+                window.location.href = "/";
+            }
+        });
+    </script>
+
 </body>
 </html>

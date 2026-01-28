@@ -2,9 +2,19 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>K28-CMU | Cyber Security Scanner</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neuron Scanner</title>
+    
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='favicon-16x16.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon-32x32.png') }}">
+
+    <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
+    <meta name="theme-color" content="#ffffff">
+
     <style>
         :root {
             --bg-primary: #0a0c10;
@@ -15,66 +25,69 @@
             --accent-green: #00ff9d;
             --accent-red: #ff3e3e;
             --border-color: #30363d;
-            --glow: 0 0 15px rgba(0, 212, 255, 0.3);
         }
 
         body {
             background-color: var(--bg-primary);
             background-image: 
                 radial-gradient(circle at 50% 50%, rgba(0, 212, 255, 0.05) 0%, transparent 50%),
-                linear-gradient(rgba(0, 212, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(rgba(0, 212, 255, 0.08) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(0, 212, 255, 0.02) 1px, transparent 1px);
             background-size: 100% 100%, 30px 30px, 30px 30px;
             color: var(--text-primary);
             font-family: 'Roboto Mono', monospace;
             margin: 0;
+            padding: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
+        /* Khung chính linh hoạt */
         .main-frame {
-            margin-top: 60px;
-            width: 90%;
+            margin-top: 40px;
+            width: 95%;
             max-width: 800px;
             position: relative;
+            padding-bottom: 40px;
         }
 
-        /* Hiệu ứng Header */
         header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
         }
 
         h1 {
             font-family: 'Orbitron', sans-serif;
-            font-size: 3rem;
+            font-size: clamp(1.8rem, 6vw, 3rem);
             letter-spacing: 4px;
             margin: 0;
             background: linear-gradient(90deg, #fff, var(--accent-blue), var(--accent-green));
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.5));
+            filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.3));
         }
 
         .status-bar {
             display: flex;
+            flex-wrap: wrap;
             justify-content: center;
-            gap: 20px;
+            gap: 15px;
             margin-top: 15px;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: var(--accent-blue);
             text-transform: uppercase;
         }
 
-        /* Container chính */
+        /* Container chính với hiệu ứng Scanline */
         .glass-container {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 20px;
-            padding: 40px;
+            padding: clamp(20px, 5vw, 40px);
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
             position: relative;
             overflow: hidden;
@@ -83,20 +96,38 @@
         .glass-container::before {
             content: "";
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 2px;
-            background: linear-gradient(90deg, transparent, var(--accent-blue), transparent);
-            animation: scanline 3s linear infinite;
+            inset: 0;
+            padding: 2.0px; /* độ dày vệt chạy */
+            border-radius: 20px;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                var(--accent-blue),
+                var(--accent-green),
+                transparent
+        );
+            background-size: 300% 300%;
+            animation: borderFlow 4s linear infinite;
+
+    /* tạo viền rỗng */
+        -webkit-mask:
+            linear-gradient(#000 0 0) content-box,
+            linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
         }
 
-        @keyframes scanline {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
+
+        @keyframes borderFlow {
+            0%   { background-position:   0% 50%; }
+            100% { background-position: 300% 50%; }
         }
 
-        /* Form styling */
+
         .input-group {
             position: relative;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
 
         .input-group i {
@@ -115,6 +146,7 @@
             padding: 15px 15px 15px 45px;
             color: #fff;
             box-sizing: border-box;
+            font-size: 16px; /* Chống zoom trên iPhone */
             transition: 0.3s;
         }
 
@@ -122,16 +154,11 @@
             background: #000;
             border: 1px dashed var(--border-color);
             width: 100%;
-            padding: 20px;
+            padding: 15px;
             border-radius: 12px;
             cursor: pointer;
             box-sizing: border-box;
-        }
-
-        input:focus {
-            border-color: var(--accent-blue);
-            box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
-            outline: none;
+            color: var(--text-secondary);
         }
 
         button {
@@ -143,11 +170,12 @@
             border-radius: 12px;
             font-family: 'Orbitron', sans-serif;
             font-weight: bold;
-            font-size: 1.1rem;
+            font-size: 1rem;
             cursor: pointer;
             transition: 0.4s;
             text-transform: uppercase;
             letter-spacing: 2px;
+            margin-top: 20px;
         }
 
         button:hover {
@@ -156,63 +184,58 @@
             box-shadow: 0 0 30px rgba(0, 255, 157, 0.4);
         }
 
-        /* Kết quả chuyên nghiệp */
+        /* Kết quả hiển thị */
         .result-box {
             margin-top: 30px;
-            padding: 25px;
+            padding: 20px;
             border-radius: 12px;
-            text-align: left;
             animation: slideUp 0.5s ease-out;
         }
 
         .safe { border: 1px solid var(--accent-green); background: rgba(0, 255, 157, 0.05); }
         .danger { border: 1px solid var(--accent-red); background: rgba(255, 62, 62, 0.05); }
 
-        .result-header {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            font-size: 1.4rem;
-            font-weight: bold;
-            margin-bottom: 15px;
-        }
-
         .details-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            font-size: 0.85rem;
-            color: var(--text-secondary);
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
         }
 
         .detail-item {
             background: rgba(0,0,0,0.3);
-            padding: 10px;
-            border-radius: 6px;
-            border-left: 2px solid var(--accent-blue);
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 3px solid var(--accent-blue);
+            font-size: 0.8rem;
         }
 
-        .detail-item span { color: var(--text-primary); display: block; margin-top: 4px; word-break: break-all; }
+        .detail-item span { color: var(--accent-blue); display: block; margin-top: 4px; word-break: break-all; font-weight: bold; }
 
         @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         .nav-links {
             margin-top: 30px;
             display: flex;
-            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
         }
 
         .nav-btn {
             text-decoration: none;
             color: var(--text-secondary);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             padding: 10px 20px;
             border: 1px solid var(--border-color);
             border-radius: 8px;
             transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .nav-btn:hover {
@@ -221,11 +244,20 @@
             background: rgba(0, 212, 255, 0.05);
         }
 
+        /* Điều chỉnh cho Mobile */
+        @media (max-width: 600px) {
+            .main-frame { margin-top: 20px; }
+            .status-bar span { font-size: 0.65rem; }
+            .details-grid { grid-template-columns: 1fr; }
+            .nav-btn { width: 100%; justify-content: center; }
+        }
+
         footer {
             margin: 40px 0;
             color: var(--text-secondary);
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             letter-spacing: 2px;
+            text-align: center;
         }
     </style>
 </head>
@@ -233,7 +265,7 @@
 
     <div class="main-frame">
         <header>
-            <h1>NEURON SCANNER</h1>
+            <h1>Neuron Scanner</h1>
             <div class="status-bar">
                 <span><i class="fas fa-shield-alt"></i> Static Analysis</span>
                 <span><i class="fas fa-network-wired"></i> Phishing Defense</span>
@@ -245,43 +277,45 @@
             <form method="POST" enctype="multipart/form-data">
                 <div class="input-group">
                     <i class="fas fa-link"></i>
-                    <input type="text" name="url" placeholder="Nhập URL cần thẩm định...">
+                    <input type="text" name="url" placeholder="Enter your URL here">
                 </div>
 
-                <div style="margin: 15px 0; color: var(--text-secondary); font-size: 0.8rem;">OR UPLOAD BINARY</div>
+                <div style="margin: 10px 0 15px 5px; color: var(--text-secondary); font-size: 0.75rem; font-weight: bold;">
+                    <i class="fas fa-file-upload"></i> OR UPLOAD BINARY
+                </div>
 
                 <input type="file" name="file">
                 
-                <button type="submit" style="margin-top: 25px;">
-                    <i class="fas fa-search"></i> Thực thi phân tích
+                <button type="submit">
+                    <i class="fas fa-bolt"></i> Thực thi phân tích
                 </button>
             </form>
 
             {% if result %}
                 <div class="result-box {% if 'an toàn' in result|lower %}safe{% else %}danger{% endif %}">
-                    <div class="result-header">
+                    <div style="display: flex; align-items: center; gap: 12px; font-weight: bold; font-size: 1.2rem; margin-bottom: 15px;">
                         {% if 'an toàn' in result|lower %}
-                            <i class="fas fa-check-circle" style="color: var(--accent-green);"></i>
-                            <span>CLEAN SYSTEM</span>
+                            <i class="fas fa-check-shield" style="color: var(--accent-green); font-size: 1.5rem;"></i>
+                            <span>AN TOÀN</span>
                         {% else %}
-                            <i class="fas fa-exclamation-triangle" style="color: var(--accent-red);"></i>
-                            <span>THREAT DETECTED</span>
+                            <i class="fas fa-biohazard" style="color: var(--accent-red); font-size: 1.5rem;"></i>
+                            <span>MỐI ĐE DỌA ĐÃ PHÁT HIỆN</span>
                         {% endif %}
                     </div>
                     
-                    <div class="result-text" style="margin-bottom: 20px;">
+                    <div class="result-text" style="line-height: 1.6; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">
                         {{ result }}
                     </div>
 
                     <div class="details-grid">
                         <div class="detail-item">
-                            ENGINE <span>Heuristic v2.1</span>
+                            Engine <span>Heuristic Engine</span>
                         </div>
                         <div class="detail-item">
-                            TIMESTAMP <span>{{ now }}</span>
+                            THỜI GIAN <span>{{ now }}</span>
                         </div>
-                        <div class="detail-item" style="grid-column: span 2;">
-                            DẤU HIỆU PHÂN TÍCH <span>{{ result.split('Lý do: ')[-1] if 'Lý do: ' in result else 'N/A' }}</span>
+                        <div class="detail-item" style="grid-column: 1 / -1;">
+                            DẤU HIỆU RỦI RO <span>{{ result.split('Lý do: ')[-1] if 'Lý do: ' in result else 'Không phát hiện bất thường' }}</span>
                         </div>
                     </div>
                 </div>
@@ -289,12 +323,12 @@
         </div>
 
         <div class="nav-links">
-            <a href="/history" class="nav-btn"><i class="fas fa-history"></i> Lịch sử hệ thống</a>
-            <a href="/documentation" class="nav-btn"><i class="fas fa-book"></i> Documentation</a>
+            <a href="/history" class="nav-btn"><i class="fas fa-database"></i> Lịch sử hệ thống</a>
+            <a href="/documentation" class="nav-btn"><i class="fas fa-terminal"></i> Documentation</a>
         </div>
-    </div>
-
-    <footer>&copy; 2026 CYBER DEFENSE UNIT | K28-CMU</footer>
+        
+        <footer>NEURON SCANNER | K28-CMU</footer>
+    </div>  
 
 </body>
 </html>

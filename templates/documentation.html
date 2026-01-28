@@ -50,6 +50,8 @@
         table th { background: var(--bg-card); color: var(--accent-blue); }
 
         .footer { text-align: center; margin-top: 80px; color: var(--text-secondary); font-size: 0.8rem; border-top: 1px solid var(--border-color); padding-top: 20px; }
+
+        .equation { text-align: center; font-style: italic; margin: 20px 0; border: 1px dashed var(--border-color); padding: 10px; background: rgba(0,0,0,0.3); }
     </style>
 </head>
 <body>
@@ -62,74 +64,90 @@
         <section id="introduction">
             <h2>01. Giới thiệu dự án</h2>
             <div class="card">
-                <p><strong>Neuron Scanner</strong> là một hệ thống phân tích an ninh dựa trên kỹ thuật <strong>Static Analysis (Phân tích tĩnh)</strong>. Khác với các công cụ sử dụng API bên thứ ba, Neuron Scanner thực hiện giải mã và phân tích trực tiếp cấu trúc nhị phân của tệp tin và đặc điểm ngữ nghĩa của URL để đưa ra đánh giá rủi ro tức thì mà không cần thực thi mã nguồn (Zero-Execution Policy).</p>
+                <p><strong>Neuron Scanner phiên bản 2.0</strong> là một ứng dụng web chuyên sâu về phân tích an ninh mạng, tập trung vào việc phát hiện rủi ro tiềm ẩn trong các liên kết URL và tệp tin thông qua các thuật toán phân tích tĩnh thủ công. Được phát triển bằng ngôn ngữ Python với khung Flask, hệ thống này đảm bảo tính an toàn cao bằng cách tránh thực thi mã nguồn (zero-execution policy), đồng thời lưu trữ lịch sử phân tích trong cơ sở dữ liệu SQLite để hỗ trợ theo dõi và nghiên cứu. Khác với các công cụ phụ thuộc vào API bên ngoài, Neuron Scanner sử dụng các heuristic nội tại để đánh giá rủi ro, dựa trên các nguyên tắc khoa học máy tính và an ninh mạng, nhằm cung cấp kết quả nhanh chóng và đáng tin cậy mà không yêu cầu kết nối mạng bên ngoài.</p>
+                <p>Dự án nhấn mạnh vào tính học thuật bằng cách tích hợp các phương pháp phân tích dựa trên lý thuyết thông tin (như entropy) và phân tích cú pháp (như parsing domain), giúp người dùng hiểu rõ cơ chế hoạt động. Ứng dụng được thiết kế với giao diện thân thiện, hỗ trợ tải lên tệp tin với giới hạn kích thước 32MB, và tự động xóa tệp sau phân tích để bảo vệ quyền riêng tư.</p>
             </div>
         </section>
 
         <section id="file-analysis">
-            <h2>02. Cơ chế phân tích Tệp tin (File Analysis)</h2>
+            <h2>02. Cơ chế phân tích tệp tin (File Static Analysis)</h2>
             <div class="card">
-                <p>Hệ thống áp dụng đa lớp kiểm duyệt để xác định danh tính và độ nguy hại của tệp tin:</p>
+                <p>Hệ thống áp dụng một chuỗi các thuật toán heuristic thủ công để đánh giá rủi ro của tệp tin mà không thực thi bất kỳ mã nào. Quá trình phân tích bao gồm kiểm tra thuộc tính cơ bản, tính toán độ phức tạp dữ liệu, và tìm kiếm chuỗi nhạy cảm, nhằm phát hiện các dấu hiệu của phần mềm độc hại như malware packed hoặc script tự động hóa nguy hiểm. Các bước được thực hiện tuần tự trên dữ liệu nhị phân của tệp, đảm bảo tính toàn vẹn và tránh rủi ro lây nhiễm.</p>
                 
-                <h3>A. Phân tích chữ ký số (Magic Bytes)</h3>
-                <p>Hệ thống không dựa vào phần mở rộng (extension) của tệp vì đây là yếu tố dễ bị giả mạo. Thay vào đó, chúng tôi quét các Byte đầu tiên của tệp để xác định định dạng thực sự:</p>
+                <h3>A. Kiểm tra thuộc tính cơ bản và định dạng</h3>
+                <p>Thuật toán bắt đầu bằng việc trích xuất tên tệp, phần mở rộng (extension), và kích thước. Phần mở rộng được so sánh với danh sách các loại tệp thực thi nguy hiểm, bao gồm: <code>.exe</code>, <code>.bat</code>, <code>.scr</code>, <code>.pif</code>, <code>.com</code>, <code>.js</code>, <code>.vbs</code>, <code>.ps1</code>. Nếu khớp, tệp được gắn cờ rủi ro cao do khả năng thực thi mã độc. Đồng thời, kích thước tệp được kiểm tra: tệp lớn hơn 50MB hoặc bằng 0 (rỗng) sẽ được đánh dấu là bất thường, vì chúng có thể là vector cho các cuộc tấn công DoS hoặc che giấu dữ liệu.</p>
                 <table>
-                    <tr><th>Header (Hex)</th><th>Định dạng thực</th><th>Rủi ro tiềm ẩn</th></tr>
-                    <tr><td><code>4D 5A</code></td><td>Windows Executable (.exe)</td><td>Thực thi mã độc trực tiếp</td></tr>
-                    <tr><td><code>25 50 44 46</code></td><td>Adobe PDF (.pdf)</td><td>Khai thác lỗi Buffer Overflow</td></tr>
-                    <tr><td><code>50 4B 03 04</code></td><td>ZIP Archive (.zip)</td><td>Chứa payload nén che giấu</td></tr>
+                    <tr><th>Tiêu chí kiểm tra</th><th>Mô tả</th><th>Rủi ro tiềm ẩn</th></tr>
+                    <tr><td>Phần mở rộng nguy hiểm</td><td>So khớp với danh sách predefined</td><td>Thực thi mã độc trực tiếp</td></tr>
+                    <tr><td>Kích thước > 50MB</td><td>Chuyển đổi kích thước sang MB và so sánh</td><td>Tiêu tốn tài nguyên hoặc che giấu payload lớn</td></tr>
+                    <tr><td>Kích thước = 0</td><td>Kiểm tra bằng <code>os.path.getsize()</code></td><td>Tệp placeholder cho tấn công lừa đảo</td></tr>
                 </table>
 
-                <h3>B. Chỉ số hỗn loạn dữ liệu (Shannon Entropy)</h3>
-                <p>Sử dụng thuật toán tính toán Entropy để đo lường độ ngẫu nhiên của các Byte trong tệp. Đây là chìa khóa để phát hiện mã độc đã qua xử lý:</p>
+                <h3>B. Tính toán Shannon Entropy</h3>
+                <p>Để phát hiện dữ liệu đã bị nén hoặc mã hóa (thường thấy trong malware), hệ thống tính toán entropy theo công thức lý thuyết thông tin của Claude Shannon. Entropy đo lường độ hỗn loạn của phân bố byte trong tệp, với giá trị cao chỉ ra dữ liệu ngẫu nhiên cao – dấu hiệu của packing (ví dụ: UPX) hoặc encryption.</p>
+                <div class="equation">
+                    \[ H = -\sum_{i=0}^{255} p_i \log_2(p_i) \]
+                    <p>Trong đó \( p_i = \frac{f_i}{N} \), với \( f_i \) là tần suất xuất hiện của byte \( i \), và \( N \) là tổng số byte.</p>
+                </div>
+                <p>Thuật toán đọc toàn bộ dữ liệu tệp dưới dạng nhị phân, tính tần suất của 256 giá trị byte có thể, và áp dụng công thức trên (bỏ qua các \( p_i = 0 \)). Ngưỡng rủi ro được đặt như sau:</p>
                 <ul>
-                    <li><span class="highlight">Entropy > 7.5:</span> Dấu hiệu tệp đã bị <strong>Packed</strong> (nén bởi UPX, Themida) hoặc <strong>Encrypted</strong> (mã hóa) để né tránh Antivirus.</li>
-                    <li>Hệ thống tự động gắn cờ rủi ro khi một file văn bản hoặc ảnh có Entropy bất thường.</li>
+                    <li>Đối với tệp thực thi: Entropy > 7.5 → Nghi ngờ packed malware.</li>
+                    <li>Đối với tệp không thực thi: Entropy > 7.999 → Entropy cực cao bất thường, có thể là dữ liệu mã hóa.</li>
                 </ul>
 
-                <h3>C. Quét chuỗi nhạy cảm (String Analysis)</h3>
-                <p>Truy xuất dữ liệu 1MB đầu tiên của tệp để tìm kiếm các hàm hệ thống nguy hiểm như <code>powershell</code>, <code>cmd.exe</code>, hoặc các kết nối <code>http://</code> bất thường được nhúng ngầm.</p>
+                <h3>C. Phân tích chuỗi nhạy cảm (String Matching)</h3>
+                <p>Thuật toán trích xuất 1MB dữ liệu đầu tiên của tệp và tìm kiếm các chuỗi lệnh hệ thống hoặc chỉ dấu nguy hiểm bằng cách so khớp trực tiếp (string matching). Danh sách chuỗi được obfuscate nhẹ để tránh tự phát hiện nhầm, và khác biệt giữa tệp thực thi và không thực thi:</p>
+                <ul>
+                    <li>Đối với tệp thực thi: Tìm kiếm <code>cmd.exe</code>, <code>powershell</code>, <code>http://</code>, <code>https://</code>, <code>MZ</code> (magic bytes của PE executable).</li>
+                    <li>Đối với tệp không thực thi: Tìm kiếm <code>cmd.exe</code>, <code>powershell</code>.</li>
+                </ul>
+                <p>Nếu tìm thấy, tệp được gắn cờ chứa lệnh thực thi tiềm ẩn, có thể dẫn đến khai thác lỗ hổng khi mở.</p>
             </div>
         </section>
 
         <section id="url-analysis">
-            <h2>03. Cơ chế phân tích URL (Heuristic Scan)</h2>
+            <h2>03. Cơ chế phân tích URL (Heuristic URL Parsing)</h2>
             <div class="card">
-                <p>Thuật toán phân tích URL tập trung vào việc bóc tách cấu trúc tên miền (Domain Anatomy) để phát hiện chiến dịch Phishing:</p>
+                <p>Phân tích URL dựa trên các thuật toán parsing và heuristic thủ công, sử dụng thư viện <code>urllib.parse</code> để phân tích cấu trúc URL mà không phụ thuộc vào dịch vụ bên ngoài. Mục tiêu là phát hiện các dấu hiệu phishing qua phân tích cú pháp domain, từ khóa, và đặc trưng bất thường, dựa trên các mô hình tấn công phổ biến trong an ninh mạng.</p>
                 <div class="tech-box">
                     <div class="tech-item">
-                        <strong>Top-Level Domain (TLD) Check</strong>
-                        Kiểm tra danh sách các đuôi tên miền rẻ tiền thường xuyên bị lạm dụng như <code>.xyz</code>, <code>.top</code>, <code>.online</code>, <code>.cfd</code>.
+                        <strong>Kiểm tra độ dài và subdomain</strong>
+                        Nếu độ dài URL > 100 ký tự, gắn cờ bất thường. Phân tích hostname thành các subdomain; nếu > 3 cấp, nghi ngờ kỹ thuật subdomain nesting để che giấu.
                     </div>
                     <div class="tech-item">
-                        <strong>Brand Spoofing Detection</strong>
-                        Sử dụng thuật toán so khớp để phát hiện việc giả mạo thương hiệu lớn. Ví dụ: <code>vietcombank.update-verify.com</code> sẽ bị phát hiện do từ khóa thương hiệu nằm ở Subdomain thay vì Root Domain.
+                        <strong>Top-Level Domain (TLD) Risk Assessment</strong>
+                        So khớp với danh sách TLD rủi ro cao (ví dụ: <code>.xyz</code>, <code>.top</code>, <code>.site</code>, <code>.online</code>, <code>.zip</code>, <code>.icu</code>, <code>.cfd</code>, <code>.tk</code>, <code>.ml</code>, <code>.ga</code>), thường được sử dụng trong chiến dịch phishing do chi phí thấp.
                     </div>
                     <div class="tech-item">
-                        <strong>Keyword Analysis</strong>
-                        Nhận diện các từ khóa thúc giục/lừa đảo: <code>login</code>, <code>secure</code>, <code>winner</code>, <code>banking</code>.
+                        <strong>Keyword Sensitivity Detection</strong>
+                        Tìm kiếm từ khóa nhạy cảm trong toàn bộ URL: <code>login</code>, <code>verify</code>, <code>secure</code>, <code>account</code>, <code>update</code>, <code>banking</code>, <code>confirm</code>, <code>signin</code>, <code>wp-admin</code>, <code>winner</code>, <code>reward</code>, <code>free</code>. Nếu tìm thấy, gắn cờ thúc giục hành động lừa đảo.
                     </div>
                     <div class="tech-item">
-                        <strong>Obfuscation Check</strong>
-                        Phát hiện các ký tự đặc biệt <code>%</code>, <code>@</code> hoặc URL quá dài (>100 ký tự) nhằm che giấu đích đến thực sự.
+                        <strong>Brand Spoofing Algorithm</strong>
+                        Kiểm tra sự hiện diện của thương hiệu lớn (<code>google</code>, <code>facebook</code>, <code>microsoft</code>, <code>apple</code>, <code>paypal</code>, <code>binance</code>, <code>vcb</code>, <code>mbbank</code>, <code>vietcombank</code>) trong URL. Nếu thương hiệu xuất hiện nhưng không nằm trong domain chính (phần sát TLD), gắn cờ giả mạo.
+                    </div>
+                    <div class="tech-item">
+                        <strong>Dangerous Character Scanning</strong>
+                        Quét ký tự đặc biệt nguy hiểm: <code>%</code>, <code>..</code>, <code><</code>, <code>></code>, <code>$</code>, <code>{</code>, <code>}</code>. Những ký tự này có thể chỉ ra obfuscation hoặc injection attacks.
+                    </div>
+                    <div class="tech-item">
+                        <strong>Blacklist Matching</strong>
+                        So khớp hostname với danh sách từ khóa đen: <code>malware</code>, <code>phish</code>, <code>scam</code>, <code>virus</code>. Nếu khớp, URL được coi là nằm trong danh sách đen heuristic.
                     </div>
                 </div>
+                <p>Nếu phát hiện bất kỳ rủi ro nào, hệ thống tổng hợp lý do dưới dạng chuỗi phân cách bởi "|", và ước lượng positives/total dựa trên số lượng rủi ro (tối đa 5 engine giả lập).</p>
             </div>
         </section>
 
-        <section id="forensics">
-            <h2>04. Tính toàn vẹn dữ liệu (Integrity)</h2>
+        <section id="integrity">
+            <h2>04. Tính toàn vẹn và lưu trữ dữ liệu</h2>
             <div class="card">
-                <p>Mọi tệp tin sau khi tải lên đều được hệ thống băm (Hashing) bằng thuật toán <strong>SHA-256</strong>. Mã băm này đóng vai trò là "vân tay số", cho phép chuyên gia bảo mật:</p>
-                <ul>
-                    <li>Tra cứu trên các cơ sở dữ liệu mã độc toàn cầu (Malware Repositories).</li>
-                    <li>Đảm bảo tệp tin không bị chỉnh sửa trong quá trình điều tra số (Digital Forensics).</li>
-                </ul>
+                <p>Hệ thống sử dụng cơ sở dữ liệu SQLite để lưu trữ metadata phân tích (timestamp, type, target, result, positives, total), cho phép truy xuất lịch sử lên đến 100 bản ghi gần nhất. Tệp tải lên được xóa ngay sau phân tích bằng <code>os.remove()</code> để đảm bảo an toàn. Mặc dù không tích hợp hashing trong phiên bản hiện tại, các thuật toán có thể mở rộng để bao gồm SHA-256 cho xác thực tính toàn vẹn trong forensics.</p>
             </div>
         </section>
 
         <div class="footer">
-            <p>&copy; 2026 NEURON SCANNER PROJECT | K28-CMU</p>
+            <p>NEURON SCANNER | K28-CMU</p>
         </div>
     </div>
 </body>
